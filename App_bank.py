@@ -1,60 +1,46 @@
 # ====================================================================
 # Chargement des librairies
 # ====================================================================
-#import sys
-#sys.setrecursionlimit(3000)
-
 import streamlit as st
-import numpy as np
-import pandas as pd
-from PIL import Image
 import pickle
-import plotly.graph_objects as go
 import matplotlib.pyplot as plt
-import seaborn as sns
-import shap
+import time
+import json
+import lightgbm
 from sklearn.metrics import confusion_matrix
 from sklearn.metrics import roc_curve
 from sklearn.metrics import auc
+import plotly.graph_objects as go
 from urllib.request import urlopen
-import json
-import shap
-from data_api import *
-import time
 import plotly.express as px
 import plotly.figure_factory as ff
 from matplotlib.figure import Figure
 import streamlit.components.v1 as components
+from PIL import Image  
+import pandas as pd
+from data_api import *
+import shap
 
-# Chargement des features importance de ligthgbm
 filename = './modelisation/classifier_lgbm_model.sav'
-# Chargement des features importance
 with open(filename, 'rb') as lgbm_model:
     best_model = pickle.load(lgbm_model)
-    
+
 # Chargement de agg_pay_num
 filename = './shap/shap_values.pickle'
 with open(filename, 'rb') as shap_file:
     shap_values = pickle.load(shap_file)
 
 
-
-
-
-
-# ====================================================================
-# CHARGEMENT DES DONNEES
-# ====================================================================
 sample_size = 20000
 data ,train_set,y_pred_test_export = load_all_data(sample_size)
-test_set = pd.read_csv('./data/train_set_echantillon.csv')
+test_set = pd.read_csv('data/train_set_echantillon.csv')
 
 
-### Data
+
 def show_data ():
-    st.write(data.head(10))
+    st.write(data.head(10)) 
+    
 
-### Solvency
 def pie_chart(thres):
     #st.write(100* (data['TARGET']>thres).sum()/data.shape[0])
     percent_sup_seuil =100* (data['TARGET']>thres).sum()/data.shape[0]
@@ -69,10 +55,9 @@ def show_overview():
                     max_value = 1.0 ,
                      value = 0.5,
                      step = 0.1)
-    #st.write(risque_threshold)
+    
     pie_chart(risque_threshold) 
-
-### Graphs
+ 
 def filter_graphs():
     st.subheader("Filtre des Graphes")
     col1, col2,col3 = st.columns(3)
@@ -91,8 +76,7 @@ def hist_graph ():
 def education_type():
     ed = train_set.groupby('NAME_EDUCATION_TYPE').NAME_EDUCATION_TYPE.count()
     u_ed = train_set.NAME_EDUCATION_TYPE.unique() 
-    #fig = plt.bar(u_ed, ed, bottom=None, color='blue', label='Education')
-    #st.plotly_chart(fig)
+    
 
     fig = go.Figure(data=[go.Bar(
             x=u_ed,
@@ -105,8 +89,7 @@ def education_type():
     ed_solvable = train_set[train_set['TARGET']==0].groupby('NAME_EDUCATION_TYPE').NAME_EDUCATION_TYPE.count()
     ed_non_solvable = train_set[train_set['TARGET']==1].groupby('NAME_EDUCATION_TYPE').NAME_EDUCATION_TYPE.count()
     u_ed = train_set.NAME_EDUCATION_TYPE.unique() 
-    #fig = plt.bar(u_ed, ed, bottom=None, color='blue', label='Education')
-    #st.plotly_chart(fig)
+    
 
     fig = go.Figure(data=[
         go.Bar(name='Solvable',x=u_ed,y=ed_solvable),
@@ -119,8 +102,7 @@ def education_type():
 def statut_plot ():
     ed = train_set.groupby('NAME_FAMILY_STATUS').NAME_FAMILY_STATUS.count()
     u_ed = train_set.NAME_FAMILY_STATUS.unique() 
-    #fig = plt.bar(u_ed, ed, bottom=None, color='blue', label='Education')
-    #st.plotly_chart(fig)
+    
 
     fig = go.Figure(data=[go.Bar(
             x=u_ed,
@@ -133,8 +115,7 @@ def statut_plot ():
     ed_solvable = train_set[train_set['TARGET']==0].groupby('NAME_FAMILY_STATUS').NAME_FAMILY_STATUS.count()
     ed_non_solvable = train_set[train_set['TARGET']==1].groupby('NAME_FAMILY_STATUS').NAME_FAMILY_STATUS.count()
     u_ed = train_set.NAME_FAMILY_STATUS.unique() 
-    #fig = plt.bar(u_ed, ed, bottom=None, color='blue', label='Education')
-    #st.plotly_chart(fig)
+    
 
     fig = go.Figure(data=[
         go.Bar(name='Solvable',x=u_ed,y=ed_solvable),
@@ -147,8 +128,7 @@ def statut_plot ():
 def income_type ():
     ed = train_set.groupby('NAME_INCOME_TYPE').NAME_INCOME_TYPE.count()
     u_ed = train_set.NAME_INCOME_TYPE.unique() 
-    #fig = plt.bar(u_ed, ed, bottom=None, color='blue', label='Education')
-    #st.plotly_chart(fig)
+    
 
     fig = go.Figure(data=[go.Bar(
             x=u_ed,
@@ -161,8 +141,7 @@ def income_type ():
     ed_solvable = train_set[train_set['TARGET']==0].groupby('NAME_INCOME_TYPE').NAME_INCOME_TYPE.count()
     ed_non_solvable = train_set[train_set['TARGET']==1].groupby('NAME_INCOME_TYPE').NAME_INCOME_TYPE.count()
     u_ed = train_set.NAME_INCOME_TYPE.unique() 
-    #fig = plt.bar(u_ed, ed, bottom=None, color='blue', label='Education')
-    #st.plotly_chart(fig)
+    
 
     fig = go.Figure(data=[
         go.Bar(name='Solvable',x=u_ed,y=ed_solvable),
@@ -173,18 +152,9 @@ def income_type ():
     st.plotly_chart(fig)
 
 
-
-
-
-
-
-
-
-
-###------------------------ Distribution ------------------------
 def filter_distribution():
     st.subheader("Filtre des Distribution")
-    col1, col2 = st.beta_columns(2)
+    col1, col2 = st.columns(2)
     is_age_selected = col1.radio("Distribution Age ",('non','oui'))
     is_incomdis_selected = col2.radio('Distribution Revenus ',('non','oui'))
 
@@ -197,12 +167,11 @@ def age_distribution():
     dic = {0: "solvable", 1: "non solvable"}        
     df=df.replace({"Solvabilite": dic})    
       
-    #fig = ff.create_distplot([revenus_solvable],['solvable'] ,bin_size=.25)
+    
     fig = px.histogram(df,x="Age", color="Solvabilite", nbins=40)
     st.subheader("Distribution des ages selon la sovabilité")
-    st.plotly_chart(fig)
-
-
+    st.plotly_chart(fig)  
+    
 def revenu_distribution():
     df = pd.DataFrame({'Revenus':data['AMT_INCOME_TOTAL'],
                 'Solvabilite':data['TARGET']})
@@ -210,19 +179,12 @@ def revenu_distribution():
     dic = {0: "solvable", 1: "non solvable"}        
     df=df.replace({"Solvabilite": dic})    
       
-    #fig = ff.create_distplot([revenus_solvable],['solvable'] ,bin_size=.25)
+    
     fig = px.histogram(df,x="Revenus", color="Solvabilite", nbins=40)
     st.subheader("Distribution des revenus selon la sovabilité")
     st.plotly_chart(fig)
-
-
-
-
-
-
-
-
-
+    
+    
 #--------------------------- Client Predection --------------------------
 
 def show_client_predection():
@@ -348,7 +310,6 @@ def show_model_analysis():
 
 
 
-### ----------------------- Prédiction d'un client ----------------
 
 def file_selector(folder_path='.'):
     filenames = os.listdir(folder_path)
@@ -464,11 +425,6 @@ def affiche_facteurs_influence():
                 
              
                         
-               
-        
-
-
-
 
 
 
@@ -476,21 +432,12 @@ def affiche_facteurs_influence():
 
 # ====================================================================
 # IMAGES
-# ====================================================================
-# Logo de l'entreprise                  
+# ====================================================================    
 logo =  Image.open("./Logo.png")
 
-
-# --------------------------------------------------------------------
-# LOGO
-# --------------------------------------------------------------------
-# Chargement du logo de l'entreprise
 st.sidebar.image(logo, width=240, caption=" Dashboard - Aide à la décision",
-                 #use_column_width='always')                             
+                 use_column_width='always')
 
-# ====================================================================
-# HEADER - TITRE
-# ====================================================================
 html_header="""
     <head>
         <title>Application Dashboard Crédit Score</title>
@@ -511,31 +458,8 @@ html_header="""
           border-width: 1.5px;"/>
      </h1>
 """
-#st.set_page_config(page_title="Prêt à dépenser - Dashboard", page_icon="", layout="wide")
 st.markdown('<style>body{background-color: #fbfff0}</style>',unsafe_allow_html=True)
 st.markdown(html_header, unsafe_allow_html=True)
-
-# Cacher le bouton en haut à droite
-st.markdown(""" <style>
-#MainMenu {visibility: hidden;}
-footer {visibility: hidden;}
-</style> """, unsafe_allow_html=True)
-
-# Suppression des marges par défaut
-padding = 1
-st.markdown(f""" <style>
-    .reportview-container .main .block-container{{
-        padding-top: {padding}rem;
-        padding-right: {padding}rem;
-        padding-left: {padding}rem;
-        padding-bottom: {padding}rem;
-    }} </style> """, unsafe_allow_html=True)
-
-
-# ====================================================================
-# MENUS
-# ====================================================================
-
 
 st.sidebar.title("Menus")
 sidebar_selection = st.sidebar.radio(
