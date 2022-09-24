@@ -47,7 +47,7 @@ with open(filename, 'rb') as shap_file:
 # ====================================================================
 sample_size = 20000
 data ,train_set,y_pred_test_export = load_all_data(sample_size)
-test_set = pd.read_csv('./data/test_set_echantillon.csv')
+test_set = pd.read_csv('./data/train_set_echantillon.csv')
 
 
 ### Data
