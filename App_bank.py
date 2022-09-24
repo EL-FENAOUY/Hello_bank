@@ -1,8 +1,8 @@
 # ====================================================================
 # Chargement des librairies
 # ====================================================================
-import sys
-sys.setrecursionlimit(3000)
+#import sys
+#sys.setrecursionlimit(3000)
 
 import streamlit as st
 import numpy as np
@@ -11,23 +11,19 @@ from PIL import Image
 import pickle
 import plotly.graph_objects as go
 import matplotlib.pyplot as plt
-import matplotlib.lines as mlines
 import seaborn as sns
 import shap
 from sklearn.metrics import confusion_matrix
 from sklearn.metrics import roc_curve
 from sklearn.metrics import auc
-import os
 from urllib.request import urlopen
 import json
+import shap
 from data_api import *
 import time
 import plotly.express as px
 import plotly.figure_factory as ff
 from matplotlib.figure import Figure
-import matplotlib.pyplot as plt
-import plotly.graph_objects as go
-import time
 import streamlit.components.v1 as components
 
 # Chargement des features importance de ligthgbm
@@ -49,9 +45,9 @@ with open(filename, 'rb') as shap_file:
 # ====================================================================
 # CHARGEMENT DES DONNEES
 # ====================================================================
-sample_size = 10000
+sample_size = 20000
 data ,train_set,y_pred_test_export = load_all_data(sample_size)
-test_set = pd.read_csv('data/train_set_echantillon.csv')
+test_set = pd.read_csv('./data/test_set_echantillon.csv')
 
 
 ### Data
@@ -65,7 +61,7 @@ def pie_chart(thres):
     percent_inf_seuil = 100-percent_sup_seuil
     d = {'col1': [percent_sup_seuil,percent_inf_seuil], 'col2': ['% Non Solvable','% Solvable',]}
     df = pd.DataFrame(data=d)
-    fig = px.pie(df,values='col1', names='col2', title=' Pourcentage de solvabilité des clients du dataset')
+    fig = px.pie(df,values='col1', names='col2', title=' Pourcentage de solvabilité des clients di dataset')
     st.plotly_chart(fig)
 def show_overview():
     st.title("Risque")
@@ -188,7 +184,7 @@ def income_type ():
 ###------------------------ Distribution ------------------------
 def filter_distribution():
     st.subheader("Filtre des Distribution")
-    col1, col2 = st.columns(2)
+    col1, col2 = st.beta_columns(2)
     is_age_selected = col1.radio("Distribution Age ",('non','oui'))
     is_incomdis_selected = col2.radio('Distribution Revenus ',('non','oui'))
 
@@ -430,7 +426,7 @@ def affiche_facteurs_influence():
             
                 
                 explainer = shap.TreeExplainer(best_model)
-                id_input = st.number_input("Donnez Id du Client",100002)
+                id_input = st.number_input("Donnez Id du Client",100001)
                 client_index = test_set[test_set['SK_ID_CURR'] == id_input].index.item()
                 X_shap = test_set.set_index('SK_ID_CURR')
                 X_test_courant = X_shap.iloc[client_index]
@@ -490,7 +486,7 @@ logo =  Image.open("./Logo.png")
 # --------------------------------------------------------------------
 # Chargement du logo de l'entreprise
 st.sidebar.image(logo, width=240, caption=" Dashboard - Aide à la décision",
-                 use_column_width='always')                             
+                 #use_column_width='always')                             
 
 # ====================================================================
 # HEADER - TITRE
