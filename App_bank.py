@@ -387,7 +387,7 @@ def affiche_facteurs_influence():
             
                 
                 explainer = shap.TreeExplainer(best_model)
-                id_input = st.number_input("Donnez Id du Client",100001)
+                id_input = st.number_input("Donnez Id du Client",100002)
                 client_index = test_set[test_set['SK_ID_CURR'] == id_input].index.item()
                 X_shap = test_set.set_index('SK_ID_CURR')
                 X_test_courant = X_shap.iloc[client_index]
